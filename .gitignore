@@ -1,11 +1,21 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
+# Ambiente
 .env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# uv
+# (uv.lock DEVE ser versionado, não ignorar)
+
+# Editor
+.vscode/
+.idea/
+
+# Docker
+postgres_data/
