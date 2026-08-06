@@ -1,5 +1,7 @@
-from datetime import datetime 
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, EmailStr
+
 
 class UserCreate(BaseModel):
     nome: str

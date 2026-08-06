@@ -1,6 +1,8 @@
-from datetime import datetime, timedelta, timezone
-from jose import JWTError, jwt
+from datetime import UTC, datetime, timedelta
+
 import bcrypt
+from jose import JWTError, jwt
+
 from api.core.config import settings
 
 
@@ -14,7 +16,7 @@ def create_acess_token(subject: str) -> str:
     """
     subject: o id ou email do usuário
     """
-    expire=datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+    expire=datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     playload = {"sub": str(subject), "exp": expire}
     encoded_jwt = jwt.encode(playload, settings.secret_key, algorithm=settings.algorithm)
     return encoded_jwt
