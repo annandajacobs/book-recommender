@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
 from api.core.deps import get_current_user
 from api.database.session import get_db
 from api.models.user import User
@@ -50,4 +51,20 @@ def update_goal(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    goal = _get
+    goal = _get_owned_goal(goal_id, db, current_user)
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(goal, field, value)
+        db.commit()
+        db.refresh(goal)
+        return goal
+
+
+@router.delete("/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_goal(
+    goal_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    goal = _get_owned_goal(goal_id, db, current_user)
+    db.delete(goal)
+    db.commit()

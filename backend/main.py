@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 
 from api.database.session import get_db
 from api.v1.auth import router as auth_router
+from api.v1.goals import router as goals_router
+from api.v1.preferences import router as preferences_router
+from api.v1.reading_history import router as reading_history_router
 
 app = FastAPI(
     title="Book Recommender API",
@@ -13,6 +16,9 @@ app = FastAPI(
 )
 
 app.include_router(auth_router)
+app.include_router(preferences_router)
+app.include_router(goals_router)
+app.include_router(reading_history_router)
 
 @app.get("/")
 def health_check():

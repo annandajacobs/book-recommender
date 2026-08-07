@@ -5,7 +5,11 @@ from api.core.deps import get_current_user
 from api.database.session import get_db
 from api.models.user import User
 from api.models.user_preference import UserPreference
-from api.schemas.user_preference import PreferenceCreate, PreferenceOut, PreferenceUpdate
+from api.schemas.user_preference import (
+    PreferenceCreate,
+    PreferenceOut,
+    PreferenceUpdate,
+)
 
 router = APIRouter(prefix="/api/v1/preferences", tags=["preferences"])
 
