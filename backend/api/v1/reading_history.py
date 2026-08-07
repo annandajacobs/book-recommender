@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/v1/reading-history", tags=["reading-history"])
 @router.post("/", response_model=ReadingHistoryOut, status_code=status.HTTP_201_CREATED)
 def create_reading_entry(
     payload: ReadingHistoryCreate,
-    db: Session =- Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     entry = ReadingHistory(user_id = current_user.id, **payload.model_dump())
