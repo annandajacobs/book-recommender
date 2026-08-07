@@ -1,11 +1,17 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
 from api.core.deps import get_current_user
 from api.database.session import get_db
 from api.models.reading_history import ReadingHistory, StatusLeitura
 from api.models.user import User
-from api.schemas.reading_history import ReadingHistoryCreate, ReadingHistoryOut, ReadingHistoryUpdate
+from api.schemas.reading_history import (
+    ReadingHistoryCreate,
+    ReadingHistoryOut,
+    ReadingHistoryUpdate,
+)
 
 router = APIRouter(prefix="/api/v1/reading-history", tags=["reading-history"])
 
@@ -59,7 +65,7 @@ def update_reading_entry(
         setattr(entry, field, value)
 
     if updates.get("status") == StatusLeitura.CONCLUIDO and entry.finished_at is None:
-        entry.finished_at = datetime.now(timezone.utc)
+        entry.finished_at = datetime.now(UTC)
     db.commit()
     db.refresh(entry)
     return entry
@@ -72,5 +78,5 @@ def delete_reading_entry(
     current_user: User = Depends(get_current_user),
 ):
     entry = _get_owned_entry(entry_id, db, current_user)
-    db.delete()
+    db.delete(entry)
     db.commit()
