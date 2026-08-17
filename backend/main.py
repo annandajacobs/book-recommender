@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 
 from api.database.session import get_db
 from api.v1.auth import router as auth_router
+from api.v1.books import router as books_router
 from api.v1.goals import router as goals_router
 from api.v1.preferences import router as preferences_router
 from api.v1.reading_history import router as reading_history_router
-from api.v1.books import router as books_router
 
 app = FastAPI(
     title="Book Recommender API",

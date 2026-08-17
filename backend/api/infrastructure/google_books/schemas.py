@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class BookCandidate(BaseModel):
     """
     Representação normalizada de um livro, independente do formato bruto
