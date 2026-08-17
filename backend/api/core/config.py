@@ -17,7 +17,10 @@ class Settings(BaseSettings):
 
     secret_key: str = "secret"
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60 * 24 
+    access_token_expire_minutes: int = 60 * 24
+
+    google_books_api_key: str | None = None
+    google_books_base_url: str = "https://www.googleapis.com/books/v1/volumes" 
 
     @property
     def database_url(self) -> str:
