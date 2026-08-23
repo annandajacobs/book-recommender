@@ -58,7 +58,7 @@ class GoogleBooksClient:
     def _truncar_descricao(descricao: str | None) -> str | None:
         """
         Reduz o tamanho da descrição antes dela circular pelo resto do sistema
-        (e eventualmente pelo prompt do Qwen). Corta em um espaço para não
+        (e eventualmente pelo prompt do Gemma). Corta em um espaço para não
         quebrar palavra no meio.
         """
         if not descricao:

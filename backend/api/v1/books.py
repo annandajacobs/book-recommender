@@ -18,7 +18,7 @@ def search_books(
 ):
     """
     Rota de teste manual -- confirma que Query Builder + Client funcionam.
-    Ainda não filtra por perfil nem passa pelo Qwen (próxima etapa).
+    Ainda não filtra por perfil nem passa pelo Gemma (próxima etapa).
     """
     query = build_query_from_goal(
         objetivo=objetivo, idioma_preferido=idioma, max_results=max_results

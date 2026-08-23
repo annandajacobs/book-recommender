@@ -30,7 +30,7 @@ def build_query_from_goal(
 
     Não interpreta linguagem natural de forma alguma -- é concatenação
     determinística. Interpretação de texto livre (se um dia precisar)
-    fica a cargo do Qwen, fora desta camada.
+    fica a cargo do Gemma, fora desta camada.
     """
     termos = [objetivo.strip()]
 
