@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     google_books_api_key: str | None = None
     google_books_base_url: str = "https://www.googleapis.com/books/v1/volumes" 
 
+    ollama_base_url: str = "http://localhost:11434"
+    gemma_model: str = "gemma3:4b" # escolhido após teste A/B: 11x mais rápido que qwen3.5:4b
+    # cabe 100% na GPU, com qualidade de justificativa equivalente
+    
     @property
     def database_url(self) -> str:
         return (
