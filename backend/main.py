@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,6 +11,12 @@ from api.v1.books import router as books_router
 from api.v1.goals import router as goals_router
 from api.v1.preferences import router as preferences_router
 from api.v1.reading_history import router as reading_history_router
+from api.v1.recommendations import router as recommendations_router
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 
 app = FastAPI(
     title="Book Recommender API",
@@ -21,6 +29,7 @@ app.include_router(preferences_router)
 app.include_router(goals_router)
 app.include_router(reading_history_router)
 app.include_router(books_router)
+app.include_router(recommendations_router)
 
 @app.get("/")
 def health_check():
