@@ -5,13 +5,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import httpx
 
 from api.core.config import settings
-from api.infrastructure.llm.schemas import DiscoveryCandidate
 from api.infrastructure.google_books.query_builder import (
     GoogleBooksQuery,
     build_query_from_title_author,
     build_query_from_title_author_livre,
 )
 from api.infrastructure.google_books.schemas import BookCandidate
+from api.infrastructure.llm.schemas import DiscoveryCandidate
 
 DESCRICAO_MAX_CHARS = 400
 

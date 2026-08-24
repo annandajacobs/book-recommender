@@ -3,8 +3,8 @@ import unicodedata
 from difflib import SequenceMatcher
 from enum import Enum
 
-from api.infrastructure.llm.schemas import DiscoveryCandidate
 from api.infrastructure.google_books.schemas import BookCandidate
+from api.infrastructure.llm.schemas import DiscoveryCandidate
 
 TITULO_THRESHOLD_FORTE = 0.82
 AUTOR_THRESHOLD_FORTE = 0.65

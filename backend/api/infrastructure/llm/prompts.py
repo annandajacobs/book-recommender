@@ -2,7 +2,6 @@ import json
 
 from api.infrastructure.llm.schemas import RankingCandidate
 
-
 SYSTEM_PROMPT = """
 Você é um sistema de reranking de livros.
 

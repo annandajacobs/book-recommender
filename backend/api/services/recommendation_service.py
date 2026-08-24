@@ -34,7 +34,6 @@ from api.models.user_goal import UserGoal
 from api.models.user_preference import UserPreference
 from api.schemas.recommendation import RecommendationOut, RecommendedBook
 
-
 logger = logging.getLogger(__name__)
 
 

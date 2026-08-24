@@ -2,7 +2,11 @@ import json
 
 from pydantic import ValidationError
 
-from api.infrastructure.llm.schemas import DiscoveryResult, RankingCandidate, RankingResult
+from api.infrastructure.llm.schemas import (
+    DiscoveryResult,
+    RankingCandidate,
+    RankingResult,
+)
 
 
 class LlmOutputError(Exception):
