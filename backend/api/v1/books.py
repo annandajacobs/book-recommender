@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from api.core.deps import get_current_user
-from api.infrastructure.google_books.client import GoogleBooksClient
+from api.infrastructure.google_books.client import GoogleBooksClient, GoogleBooksError
 from api.infrastructure.google_books.query_builder import build_query_from_goal
 from api.infrastructure.google_books.schemas import BookCandidate
 from api.models.user import User
@@ -16,12 +16,11 @@ def search_books(
     max_results: int = Query(10, ge=1, le=40),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Rota de teste manual -- confirma que Query Builder + Client funcionam.
-    Ainda não filtra por perfil nem passa pelo Gemma (próxima etapa).
-    """
     query = build_query_from_goal(
         objetivo=objetivo, idioma_preferido=idioma, max_results=max_results
     )
     client = GoogleBooksClient()
-    return client.search(query)
+    try:
+        return client.search(query)
+    except GoogleBooksError as e:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e)) from e
