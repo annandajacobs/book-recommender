@@ -17,6 +17,6 @@ class UserPreference(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     genero: Mapped[str] = mapped_column(String(100), nullable=False)
     peso: Mapped[float] = mapped_column(Float, default=0.5, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), server_default=func.now(), onupdate=func.now())
 
     user: Mapped["User"] = relationship(back_populates="preferences")
