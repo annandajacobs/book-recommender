@@ -3,10 +3,10 @@ import httpx
 from api.core.config import settings
 
 
-class GemmaClient:
+class LlmClient:
     def __init__(self, model: str | None = None):
         self.base_url = settings.ollama_base_url
-        self.model = model or settings.gemma_model
+        self.model = model or settings.llm_model
 
     def chat_json(self, system_prompt: str, user_prompt: str) -> str:
         url = f"{self.base_url}/api/chat"
