@@ -6,6 +6,7 @@ from api.infrastructure.llm.schemas import (
     DiscoveryResult,
     RankingCandidate,
     RankingResult,
+    SingleCandidateResult,
 )
 
 
@@ -108,3 +109,21 @@ def validate_discovery_output(raw_output: str) -> DiscoveryResult:
         )
 
     return DiscoveryResult(candidatos=candidatos_unicos)
+
+
+def validate_single_candidate_output(raw_output: str) -> SingleCandidateResult:
+    """
+    Valida a saída do LLM para avaliação de um único candidato.
+
+    Levanta LlmOutputError se o JSON for inválido ou não bater com o
+    schema esperado.
+    """
+    try:
+        data = json.loads(raw_output)
+    except json.JSONDecodeError as e:
+        raise LlmOutputError(f"Resposta do LLM não é um JSON válido: {e}") from e
+
+    try:
+        return SingleCandidateResult.model_validate(data)
+    except ValidationError as e:
+        raise LlmOutputError(f"JSON não bate com o schema esperado: {e}") from e

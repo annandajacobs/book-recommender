@@ -67,3 +67,10 @@ class DiscoveryResult(BaseModel):
     """Resposta completa e já validada (schema) da etapa de descoberta."""
 
     candidatos: list[DiscoveryCandidate]
+
+
+class SingleCandidateResult(BaseModel):
+    """Resposta do LLM para avaliação de UM único candidato por vez."""
+
+    atende_objetivo: bool
+    justificativa: str
