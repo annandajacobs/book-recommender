@@ -1,5 +1,7 @@
 import logging
 
+from difflib import SequenceMatcher
+
 import httpx
 from sqlalchemy.orm import Session
 
@@ -24,9 +26,9 @@ from api.infrastructure.llm.output_validator import (
     DiscoveryOutputError,
     LlmOutputError,
     validate_discovery_output,
-    validate_ranking_output,
+    validate_single_candidate_output,
 )
-from api.infrastructure.llm.prompts import build_ranking_prompt
+from api.infrastructure.llm.prompts import build_single_candidate_prompt
 from api.infrastructure.llm.schemas import DiscoveryResult, RankingCandidate
 from api.models.reading_history import ReadingHistory
 from api.models.user import User
@@ -238,16 +240,12 @@ class RecommendationService:
         ranking_candidates: list[RankingCandidate],
         candidatos_por_id: dict[str, BookCandidate],
     ) -> list[RecommendedBook]:
-
-        system_prompt, user_prompt = build_ranking_prompt(
-            objetivo_usuario=goal.objetivo,
-            idioma_resposta=idioma_resposta,
-            candidatos=ranking_candidates,
-        )
-
-        raw_output = self.llm.chat_json(system_prompt, user_prompt)
-
-        resultado = validate_ranking_output(raw_output, ranking_candidates)
+        """
+        Avalia cada candidato numa chamada SEPARADA ao LLM (uma decisão
+        booleana por vez), em vez de pedir N decisões independentes numa
+        única resposta -- modelos pequenos (ex.: llama3.2:3b) seguem essa
+        divisão com muito mais consistência.
+        """
 
         scores_por_id = {
             candidate.id: candidate.score_deterministico for candidate in ranking_candidates
@@ -256,43 +254,81 @@ class RecommendationService:
             candidate.id: candidate.status_validacao for candidate in ranking_candidates
         }
 
-        recomendacoes = []
+        aceitos: list[tuple[RankingCandidate, str]] = []
 
-        for item in resultado.recomendacoes:
-            candidate = candidatos_por_id.get(item.id)
+        for candidate in ranking_candidates:
+            if len(aceitos) >= RECOMENDACOES_FINAIS:
+                break
 
-            if candidate is None:
-                logger.warning("LLM retornou ID inexistente: %s", item.id)
-                continue
-
-            recomendacoes.append(
-                RecommendedBook(
-                    id=candidate.id,
-                    titulo=candidate.titulo,
-                    autor=candidate.autor,
-                    thumbnail=candidate.thumbnail,
-                    categorias=candidate.categorias,
-                    average_rating=candidate.average_rating,
-                    ratings_count=candidate.ratings_count,
-                    posicao=item.posicao,
-                    score_deterministico=scores_por_id[candidate.id],
-                    justificativa=item.justificativa,
-                    status_validacao=status_por_id.get(candidate.id, "validado"),
-                )
+            system_prompt, user_prompt = build_single_candidate_prompt(
+                objetivo_usuario=goal.objetivo,
+                idioma_resposta=idioma_resposta,
+                candidato=candidate,
             )
 
-        if not recomendacoes:
-            raise LlmOutputError("LLM não retornou candidatos válidos.")
+            try:
+                raw_output = self.llm.chat_json(system_prompt, user_prompt)
+                resultado = validate_single_candidate_output(raw_output)
+            except (LlmOutputError, httpx.HTTPError) as exc:
+                logger.warning(
+                    "Avaliação individual falhou para '%s': %s. Tratando como não atende.",
+                    candidate.titulo,
+                    exc,
+                )
+                continue
+
+            if not resultado.atende_objetivo:
+                continue
+
+            if any(
+                self._titulos_parecidos(candidate.titulo, aceito.titulo)
+                for aceito, _ in aceitos
+            ):
+                logger.info(
+                    "Candidato '%s' descartado por ser edição/tradução de obra já aceita.",
+                    candidate.titulo,
+                )
+                continue
+
+            aceitos.append((candidate, resultado.justificativa))
+
+        if not aceitos:
+            raise LlmOutputError(
+                "Nenhum candidato foi marcado como atende_objetivo=True pelo LLM."
+            )
 
         logger.info(
-            "%d candidatos com atende_objetivo=True antes do corte final "
-            "(mostrando até %d): %s",
-            len(recomendacoes),
-            RECOMENDACOES_FINAIS,
-            [f"{r.titulo} — {r.autor}" for r in recomendacoes],
+            "%d candidatos com atende_objetivo=True (avaliação individual): %s",
+            len(aceitos),
+            [f"{c.titulo} — {c.autor}" for c, _ in aceitos],
         )
 
-        return recomendacoes[:RECOMENDACOES_FINAIS]
+        return [
+            RecommendedBook(
+                id=candidate.id,
+                titulo=candidate.titulo,
+                autor=candidate.autor,
+                thumbnail=candidatos_por_id[candidate.id].thumbnail,
+                categorias=candidatos_por_id[candidate.id].categorias,
+                average_rating=candidatos_por_id[candidate.id].average_rating,
+                ratings_count=candidatos_por_id[candidate.id].ratings_count,
+                posicao=posicao,
+                score_deterministico=scores_por_id[candidate.id],
+                justificativa=justificativa,
+                status_validacao=status_por_id.get(candidate.id, "validado"),
+            )
+            for posicao, (candidate, justificativa) in enumerate(aceitos, start=1)
+        ]
+
+    @staticmethod
+    def _titulos_parecidos(a: str, b: str) -> bool:
+        """
+        Compara dois títulos de forma tolerante, para evitar recomendar a
+        mesma obra duas vezes (ex.: edições/traduções diferentes que o
+        LLM aceitou em chamadas separadas, sem saber uma da outra).
+        """
+        ratio = SequenceMatcher(None, a.strip().lower(), b.strip().lower()).ratio()
+        return ratio >= 0.82
 
 
     @staticmethod
