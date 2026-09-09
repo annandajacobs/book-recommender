@@ -1,5 +1,4 @@
 import logging
-
 from difflib import SequenceMatcher
 
 import httpx
@@ -39,13 +38,10 @@ from api.schemas.recommendation import RecommendationOut, RecommendedBook
 logger = logging.getLogger(__name__)
 
 
-# --- Pipeline novo (descoberta) ---------------------------------------
-CANDIDATOS_PARA_LLM = 8   # quantos vão pro reranker final, no máximo
+CANDIDATOS_PARA_LLM = 8
 
-# --- Pipeline legado (fallback) ----------------------------------------
 CANDIDATOS_DA_API = 40
 
-# Comum aos dois pipelines
 RECOMENDACOES_FINAIS = 3
 
 
@@ -91,9 +87,6 @@ class RecommendationService:
                 reading_history=reading_history,
             )
 
-        # ---------------------------------------------------------
-        # FILTRO DE HISTÓRICO
-        # ---------------------------------------------------------
         candidatos_novos = filter_candidates(
             [validado.book for validado in candidatos_validados],
             reading_history,
@@ -120,10 +113,6 @@ class RecommendationService:
                 reading_history=reading_history,
             )
 
-        # ---------------------------------------------------------
-        # SCORE (agora só um sinal auxiliar para o reranker/fallback,
-        # não decide mais quem chega ao LLM)
-        # ---------------------------------------------------------
         pontuados = [
             (candidate, *score_candidate(candidate, user.idioma_preferido, preferencias))
             for candidate in candidatos_novos
@@ -175,9 +164,6 @@ class RecommendationService:
             pipeline="descoberta",
         )
 
-    # =============================================================
-    # PIPELINE NOVO: DESCOBERTA + VALIDAÇÃO
-    # =============================================================
 
     def _descobrir_e_validar(self, objetivo: str) -> list[ValidatedBook]:
         """
