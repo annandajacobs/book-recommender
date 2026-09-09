@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import BookCard from "../components/BookCard";
 import EmptyState from "../components/EmptyState";
@@ -23,11 +23,13 @@ function uid() {
 
 export default function RecommendationsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const resumeGoalId = location.state?.resumeGoalId ?? null;
   const [thread, setThread] = useState([]);
   const [goals, setGoals] = useState([]);
   const [prefs, setPrefs] = useState([]);
   const [goalId, setGoalId] = useState(null);
-  const [step, setStep] = useState("loading"); // loading | ask_goal | ready
+  const [step, setStep] = useState("loading");
   const [mode, setMode] = useState("objetivo");
   const [text, setText] = useState("");
   const [nivel, setNivel] = useState("iniciante");
@@ -75,7 +77,7 @@ export default function RecommendationsPage() {
       let prefsData = [];
       try {
         [goalsData, prefsData] = await Promise.all([
-          api.listGoals(true),
+          api.listGoals(false),
           api.listPreferences(),
         ]);
       } catch (err) {
@@ -94,6 +96,31 @@ export default function RecommendationsPage() {
         });
         setMode("objetivo");
         setStep("ask_goal");
+        return;
+      }
+
+      const resumed = resumeGoalId ? goalsData.find((g) => g.id === resumeGoalId) : null;
+
+      if (resumed) {
+        const toDeativate = goalsData.filter((g) => g.ativo && g.id !== resumed.id);
+        for (const g of toDeativate) {
+          await api.updateGoal(g.id, { ativo: false });
+        }
+        if (!resumed.ativo) {
+          await api.updateGoal(resumed.id, { ativo: true });
+        }
+        setGoals(goalsData.map((g) => ({...g, ativo: g.id === resumed.id})));
+        setGoalId(resumed.id);
+        navigate(".", { replace: true, state: {} });
+
+        push({
+          role: "system",
+          kind: "context",
+          payload: { goal: resumed, prefs: prefsData },
+        });
+        await runRecommendations(resumed.id);
+        setModel("objetivo");
+        setStep("ready");
         return;
       }
 
