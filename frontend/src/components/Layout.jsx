@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
   { to: "/recomendacoes", label: "Conversa" },
-  { to: "/objetivos", label: "Objetivos" },
+  { to: "/objetivos", label: "Meus pedidos" },
   { to: "/preferencias", label: "Preferências" },
   { to: "/historico", label: "Histórico" },
 ];
